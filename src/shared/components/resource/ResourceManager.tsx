@@ -18,11 +18,11 @@ type Props<T extends Resource> = {
   resources: T[];
   columns: ResourceColumn<T>[];
   isLoading?: boolean;
-  formFields: Field[];
+  formFields: Field[] | ((isEdit: boolean) => Field[]);
   isSaving?: boolean;
   // ------------------------------
-  onCreate?: (data: Partial<T>) => void;
-  onEdit?: (id: string, data: Partial<T>) => void;
+  onCreate?: (data: Partial<T>) => Promise<void>;
+  onEdit?: (id: string, data: Partial<T>) => Promise<void>;
   onDelete?: (id: string) => void;
 };
 
@@ -128,16 +128,20 @@ export function ResourceManager<T extends Resource>({
 
       {isModalOpen && (
         <ResourceFormModal
-          item={editingItem}
+          item={
+            editingItem
+              ? { ...editingItem, password: '', confirmPassword: '' }
+              : null
+          }
           onClose={() => setIsModalOpen(false)}
-          onSave={(data) => {
-            if (editingItem && onEdit) onEdit(editingItem.id, data as Partial<T>);
-            else if (onCreate) onCreate(data as Partial<T>);
+          onSave={async (data) => {
+            if (editingItem && onEdit) await onEdit(editingItem.id, data as any);
+            else if (onCreate) await onCreate(data as any);
             if (!isSaving) {
               setIsModalOpen(false);
             }
           }}
-          fields={formFields}
+          fields={typeof formFields === 'function' ? formFields(!!editingItem) : formFields}
           isSaving={isSaving}
         />
       )}

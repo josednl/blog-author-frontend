@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Sidebar } from '@/shared/components/Sidebar';
-// import { UsersPage } from './UserPage';
+import { UsersPage } from '@/features/user/pages/UserPage';
 import { AccessPage } from '@/features/access/pages/AccessPage';
 
 type SidebarSection = 'access' | 'users';
@@ -15,7 +15,7 @@ export const AdminDashboard = () => {
       case 'access':
         return <AccessPage />;
       case 'users':
-        return '<UsersPage />';     
+        return <UsersPage />;     
       default:
         return <div className="p-4 text-gray-500">Select a section from the side menu.</div>;
     }

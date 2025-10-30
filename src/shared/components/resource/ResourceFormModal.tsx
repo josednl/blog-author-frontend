@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, RegisterOptions, FieldError } from 'react-hook-form';
+import { useForm, RegisterOptions, FieldError, FieldPath } from 'react-hook-form';
 
 type FieldOption = string | { label: string; value: string };
 
@@ -14,17 +14,19 @@ export type Field = {
 
 type Props = {
   item?: Record<string, any> | null;
+  isEdit?: boolean;
   onClose: () => void;
-  onSave: (data: Record<string, any>) => void;
+  onSave: (data: Record<string, any>) => Promise<void>;
   fields: Field[];
   isSaving?: boolean;
 };
 
-export const ResourceFormModal = ({ item, onClose, onSave, fields, isSaving = false }: Props) => {
+export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSaving = false }: Props) => {
   const {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues: item || {} });
 
@@ -32,9 +34,26 @@ export const ResourceFormModal = ({ item, onClose, onSave, fields, isSaving = fa
     reset(item || {});
   }, [item, reset]);
 
-  const onSubmit = (data: any) => {
-    if (!isSaving) {
-      onSave(data);
+  const onSubmit = async (data: Record<string, any>) => {
+    if (isSaving) return;
+
+    try {
+      await onSave(data);
+
+      onClose();
+
+    } catch (error: any) {
+      console.error('Submission failed:', error);
+
+      if (error.errors && typeof error.errors === 'object') {
+
+        Object.keys(error.errors).forEach((fieldName) => {
+          setError(fieldName as FieldPath<any>, {
+            type: 'server',
+            message: error.errors[fieldName],
+          });
+        });
+      }
     }
   };
 
@@ -52,6 +71,8 @@ export const ResourceFormModal = ({ item, onClose, onSave, fields, isSaving = fa
         return 'Invalid format.';
       case 'validate':
         return error.message || 'Validation error.';
+      case 'server':
+        return error.message;
       default:
         return 'Invalid data.';
     }

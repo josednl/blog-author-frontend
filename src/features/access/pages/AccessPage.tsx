@@ -41,6 +41,20 @@ const permissionColumns: ResourceColumn<Permission>[] = [
     header: 'Description',
     render: (perm) => <span className="text-gray-600 dark:text-gray-300">{perm.description || 'No description'}</span>,
   },
+  {
+    key: 'roles',
+    header: 'Roles',
+    render: (perm) =>
+      perm.roles?.length ? (
+        <ul className="text-xs text-gray-500 dark:text-gray-300 space-y-1">
+          {perm.roles.map((r) => (
+            <li key={r.id}>• {r.name}</li>
+          ))}
+        </ul>
+      ) : (
+        <span className="text-gray-400 italic">No roles</span>
+      ),
+  },
   { key: 'actions', header: 'Actions', className: 'w-24 text-center' },
 ];
 
@@ -63,7 +77,7 @@ export const AccessPage = () => {
 
         const [permissionsData, rolesData] = await Promise.all([
           permissionsAPI.getAll(),
-          rolesAPI.getAll() 
+          rolesAPI.getAll()
         ]);
 
         if (isMounted) {
@@ -101,7 +115,16 @@ export const AccessPage = () => {
       placeholder: 'Brief description of responsibilities.',
       rules: { maxLength: { value: 150, message: 'Maximun 150 characters.' } }
     },
-  ]), [localRoles]);
+    {
+      name: 'permissions',
+      label: 'Assigned permissions',
+      type: 'checkbox-group',
+      options: localPermissions.map((perm) => ({
+        label: perm.name,
+        value: perm.id,
+      })),
+    },
+  ]), [localPermissions]);
 
   const permissionFormFields: Field[] = useMemo(() => ([
     {
@@ -118,7 +141,16 @@ export const AccessPage = () => {
       placeholder: 'What this permit authorizes..',
       rules: { maxLength: { value: 150, message: 'Maximum 150 characters.' } }
     },
-  ]), [localPermissions]);
+    {
+      name: 'roles',
+      label: 'Assigned roles',
+      type: 'checkbox-group',
+      options: localRoles.map((role) => ({
+        label: role.name,
+        value: role.id,
+      })),
+    },
+  ]), [localRoles]);
 
   const handleCreateRole = async (data: any) => {
     setIsRoleSaving(true);

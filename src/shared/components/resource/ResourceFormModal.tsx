@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, RegisterOptions, FieldError, FieldPath } from 'react-hook-form';
 
 type FieldOption = string | { label: string; value: string };
@@ -6,7 +6,7 @@ type FieldOption = string | { label: string; value: string };
 export type Field = {
   name: string;
   label: string;
-  type?: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'password';
+  type?: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'password' | 'checkbox-group';
   options?: FieldOption[];
   rules?: RegisterOptions;
   placeholder?: string;
@@ -21,18 +21,39 @@ type Props = {
   isSaving?: boolean;
 };
 
+const preprocessItem = (item: Record<string, any> | null, fields: Field[]): Record<string, any> => {
+  if (!item) return {};
+
+  const processed: Record<string, any> = { ...item };
+
+  fields.forEach(field => {
+    if (field.type === 'checkbox-group') {
+      const value = item[field.name];
+      
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'id' in value[0]) {
+        processed[field.name] = value.map(obj => obj.id);
+      }
+    }
+  });
+
+  return processed;
+};
+
 export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSaving = false }: Props) => {
+  const defaultValues = useMemo(() => preprocessItem(item || null, fields), [item, fields]);
+  
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm({ defaultValues: item || {} });
+  } = useForm({ defaultValues: defaultValues || {} });
 
+  
   useEffect(() => {
-    reset(item || {});
-  }, [item, reset]);
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
 
   const onSubmit = async (data: Record<string, any>) => {
     if (isSaving) return;
@@ -108,7 +129,25 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
                   {field.label} {field.rules?.required && <span className="text-red-500">*</span>}
                 </label>
 
-                {field.type === 'textarea' ? (
+                {field.type === 'checkbox-group' ? (
+                  <div className="flex flex-col space-y-2">
+                    {(field.options || []).map((opt) => {
+                      const value = typeof opt === 'string' ? opt : opt.value;
+                      const label = typeof opt === 'string' ? opt : opt.label;
+                      return (
+                        <label key={value} className="inline-flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            value={value}
+                            {...register(field.name)}
+                            className="rounded border-gray-300 dark:border-gray-600 text-accent focus:ring-accent"
+                          />
+                          <span className="text-gray-800 dark:text-gray-200">{label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : field.type === 'textarea' ? (
                   <textarea
                     id={field.name}
                     placeholder={field.placeholder}

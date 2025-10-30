@@ -2,7 +2,7 @@ import { useAuth } from '@/features/auth/provider/AuthProvider';
 import { AdminDashboard } from '@/features/dashboard/components/AdminDashboard';
 import { EditorDashboard } from '@/features/dashboard/components/EditorDashboard';
 
-export const Dashboard = () => {
+export const DashboardLayout = () => {
   const { user, loading } = useAuth();
 
   if (loading) return <p>Loading...</p>;

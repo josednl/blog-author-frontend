@@ -3,7 +3,7 @@ import App from '@/app/App';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { ProtectedRoute } from '../shared/components/ProtectedRoute';
-import { Dashboard } from '@/features/dashboard/DashboardLayout';
+import { DashboardLayout } from '@/features/dashboard/DashboardLayout';
 
 const router = createBrowserRouter([
   {
@@ -12,13 +12,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
+        element: <ProtectedRoute><DashboardLayout /></ProtectedRoute>,
       },
       {
         path: '/dashboard',
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
-        // loader: authLoader,
-        // errorElement: ,
+        element: <ProtectedRoute><DashboardLayout /></ProtectedRoute>,
       },
       {
         path: '/register',

@@ -36,10 +36,9 @@ const Navbar = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `block px-4 py-2 text-sm font-medium transition-all duration-200 ${
-      isActive
-        ? 'text-accent dark:text-accent'
-        : 'text-gray-700 dark:text-gray-300 hover:text-accent dark:hover:text-accent'
+    `block px-4 py-2 text-sm font-medium transition-all duration-200 ${isActive
+      ? 'text-accent dark:text-accent'
+      : 'text-gray-700 dark:text-gray-300 hover:text-accent dark:hover:text-accent'
     }`;
 
   return (
@@ -54,15 +53,22 @@ const Navbar = () => {
           </NavLink>
 
           <div className='hidden md:flex items-center space-x-6'>
-            <NavLink to='/' className={linkClasses}>Home</NavLink>
 
-            {user && (
-              <button
-                onClick={handleLogout}
-                className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'
-              >
-                Logout
-              </button>
+            {user ? (
+              <>
+                <NavLink to='/' className={linkClasses}>Home</NavLink>
+                <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
+                  Logout
+                </button>
+              </>
+
+            ) : (
+              <>
+                <NavLink to='/login' className={linkClasses}>Login</NavLink>
+                <NavLink to='/register' className={linkClasses}>
+                  Register
+                </NavLink>
+              </>
             )}
 
             <button
@@ -98,18 +104,24 @@ const Navbar = () => {
           </div>
         </nav>
 
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ${
-          isMobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
           <div className='mt-2 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 rounded-md shadow-sm py-2'>
-            <NavLink to='/' className={linkClasses} onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
-            {user && (
-              <button
-                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-                className='block px-4 py-2 text-sm font-medium text-red-500 hover:text-red-600'
-              >
-                Logout
-              </button>
+            {user ? (
+              <>
+                <NavLink to='/' className={linkClasses} onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+                <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
+                  Logout
+                </button>
+              </>
+
+            ) : (
+              <>
+                <NavLink to='/login' className={linkClasses}>Login</NavLink>
+                <NavLink to='/register' className={linkClasses}>
+                  Register
+                </NavLink>
+              </>
             )}
           </div>
         </div>

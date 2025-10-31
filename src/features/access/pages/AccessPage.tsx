@@ -5,6 +5,7 @@ import { Role, Permission } from '@/features/access/types/accessTypes';
 import { rolesAPI } from '@/features/access/services/rolesAPI';
 import { permissionsAPI } from '@/features/access/services/permissionAPI';
 import { showErrorToast } from '@/shared/components/showErrorToast';
+import { ReloadButton } from '@/shared/components/ReloadButton';
 
 const roleColumns: ResourceColumn<Role>[] = [
   {
@@ -69,37 +70,28 @@ export const AccessPage = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+
+      const [permissionsData, rolesData] = await Promise.all([
+        permissionsAPI.getAll(),
+        rolesAPI.getAll()
+      ]);
+
+      setLocalPermissions(permissionsData);
+      setLocalRoles(rolesData);
+
+    } catch (error) {
+      // console.error("Error loading initial data in AccessPage:", error);
+      showErrorToast(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        const [permissionsData, rolesData] = await Promise.all([
-          permissionsAPI.getAll(),
-          rolesAPI.getAll()
-        ]);
-
-        if (isMounted) {
-          setLocalPermissions(permissionsData);
-          setLocalRoles(rolesData);
-        }
-      } catch (error) {
-        // console.error("Error loading initial data in AccessPage:", error);
-        showErrorToast(error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const roleFormFields: Field[] = useMemo(() => ([
@@ -229,6 +221,12 @@ export const AccessPage = () => {
 
   return (
     <div className="space-y-12">
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200"></h2>
+          <ReloadButton onClick={fetchData} isLoading={isLoading} />
+        </div>
+      </section>
 
       <section>
         <ResourceManager<Role>

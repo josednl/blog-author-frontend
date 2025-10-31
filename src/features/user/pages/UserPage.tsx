@@ -7,6 +7,7 @@ import { rolesAPI } from '@/features/access/services/rolesAPI';
 import { Role } from '@/features/access/types/accessTypes';
 import { User } from '@/features/user/types/userTypes';
 import { showErrorToast } from '@/shared/components/showErrorToast';
+import { ReloadButton } from '@/shared/components/ReloadButton';
 
 const createUserColumns = (availableRoles: Role[]): ResourceColumn<User>[] => [
   {
@@ -48,36 +49,26 @@ export const UsersPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+
+      const [usersData, rolesData] = await Promise.all([
+        usersAPI.getAll(),
+        rolesAPI.getAll(),
+      ]);
+
+      setLocalUsers(usersData);
+      setAvailableRoles(rolesData);
+    } catch (error: any) {
+      showErrorToast(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        const [usersData, rolesData] = await Promise.all([
-          usersAPI.getAll(),
-          rolesAPI.getAll(),
-        ]);
-
-        if (isMounted) {
-          setLocalUsers(usersData);
-          setAvailableRoles(rolesData);
-        }
-      } catch (error: any) {
-        showErrorToast(error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const columns = useMemo(() => createUserColumns(availableRoles), [availableRoles]);
@@ -186,6 +177,13 @@ export const UsersPage = () => {
 
   return (
     <div className="space-y-10">
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200"></h2>
+          <ReloadButton onClick={fetchData} isLoading={isLoading} />
+        </div>
+      </section>
+      
       <ResourceManager<User>
         title="System users"
         resources={localUsers}

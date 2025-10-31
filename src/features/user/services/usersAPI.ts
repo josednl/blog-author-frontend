@@ -17,9 +17,6 @@ export const usersAPI = {
     const response = await apiClient.post('/users', data);
     return response.data;
   } catch (error: any) {
-    if (error.response?.data?.errors) {
-      throw error.response.data.errors;
-    }
     throw error;
   }
   },

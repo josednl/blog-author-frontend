@@ -4,6 +4,7 @@ import { Field } from '@/shared/components/resource/ResourceFormModal';
 import { Role, Permission } from '@/features/access/types/accessTypes';
 import { rolesAPI } from '@/features/access/services/rolesAPI';
 import { permissionsAPI } from '@/features/access/services/permissionAPI';
+import { showErrorToast } from '@/shared/components/showErrorToast';
 
 const roleColumns: ResourceColumn<Role>[] = [
   {
@@ -85,7 +86,8 @@ export const AccessPage = () => {
           setLocalRoles(rolesData);
         }
       } catch (error) {
-        console.error("Error loading initial data in AccessPage:", error);
+        // console.error("Error loading initial data in AccessPage:", error);
+        showErrorToast(error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -157,8 +159,8 @@ export const AccessPage = () => {
     try {
       const newRole = await rolesAPI.create(data);
       setLocalRoles([...localRoles, newRole]);
-    } catch (error) {
-      console.error("Error creating role:", error);
+    } catch (error: any) {
+      showErrorToast(error);
       throw error;
     } finally {
       setIsRoleSaving(false);
@@ -168,10 +170,11 @@ export const AccessPage = () => {
   const handleEditRole = async (id: Role['id'], data: Partial<Role>) => {
     setIsRoleSaving(true);
     try {
+      console.log(data);
       const updated = await rolesAPI.update(id, data);
       setLocalRoles(localRoles.map((r) => (r.id === id ? updated : r)));
-    } catch (error) {
-      console.error("Error editing role:", error);
+    } catch (error: any) {
+      showErrorToast(error);
       throw error;
     } finally {
       setIsRoleSaving(false);
@@ -183,8 +186,8 @@ export const AccessPage = () => {
     try {
       await rolesAPI.delete(id);
       setLocalRoles(localRoles.filter((r) => r.id !== id));
-    } catch (error) {
-      console.error("Error while deleting the role:", error);
+    } catch (error: any) {
+      showErrorToast(error);
     }
   };
 
@@ -193,8 +196,8 @@ export const AccessPage = () => {
     try {
       const newPerm = await permissionsAPI.create(data);
       setLocalPermissions([...localPermissions, newPerm]);
-    } catch (error) {
-      console.error("Error creating permission:", error);
+    } catch (error: any) {
+      showErrorToast(error);
       throw error;
     } finally {
       setIsPermissionSaving(false);
@@ -206,8 +209,8 @@ export const AccessPage = () => {
     try {
       const updated = await permissionsAPI.update(id, data);
       setLocalPermissions(localPermissions.map((p) => (p.id === id ? updated : p)));
-    } catch (error) {
-      console.error("Error editing permission:", error);
+    } catch (error: any) {
+      showErrorToast(error);
       throw error;
     } finally {
       setIsPermissionSaving(false);
@@ -219,11 +222,10 @@ export const AccessPage = () => {
     try {
       await permissionsAPI.delete(id);
       setLocalPermissions(localPermissions.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error("Error deleting permission:", error);
+    } catch (error: any) {
+      showErrorToast(error);
     }
   };
-
 
   return (
     <div className="space-y-12">

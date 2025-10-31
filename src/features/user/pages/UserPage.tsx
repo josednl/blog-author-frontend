@@ -6,6 +6,7 @@ import { usersAPI } from '@/features/user/services/usersAPI';
 import { rolesAPI } from '@/features/access/services/rolesAPI';
 import { Role } from '@/features/access/types/accessTypes';
 import { User } from '@/features/user/types/userTypes';
+import { showErrorToast } from '@/shared/components/showErrorToast';
 
 const createUserColumns = (availableRoles: Role[]): ResourceColumn<User>[] => [
   {
@@ -63,8 +64,8 @@ export const UsersPage = () => {
           setLocalUsers(usersData);
           setAvailableRoles(rolesData);
         }
-      } catch (error) {
-        console.error("Error loading initial data in UsersPage:", error);
+      } catch (error: any) {
+        showErrorToast(error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -147,22 +148,7 @@ export const UsersPage = () => {
       setLocalUsers([...localUsers, safeUser]);
       toast.success('User created successfully!');
     } catch (error: any) {
-      console.log(error);
-      const errors = error.map((e: any) => e.msg);
-
-      toast.custom(
-        (t) => (
-          <div className={`bg-red-100 border border-red-400 text-red-800 p-4 rounded-md max-w-sm ${t.visible ? 'animate-enter' : 'animate-leave'}`}>
-            <strong className="block mb-1 font-semibold">There were some errors:</strong>
-            <ul className="list-disc pl-4">
-              {errors.map((msg: string, i: number) => (
-                <li key={i}>{msg}</li>
-              ))}
-            </ul>
-          </div>
-        ),
-        { duration: 5000 }
-      );
+      showErrorToast(error);
       throw error;
     } finally {
       setIsSaving(false);
@@ -179,8 +165,8 @@ export const UsersPage = () => {
     try {
       const updated = await usersAPI.update(id, dataToSend);
       setLocalUsers(localUsers.map((u) => (u.id === id ? { ...u, ...updated } : u)));
-    } catch (error) {
-      console.error("Error editing user:", error);
+    } catch (error: any) {
+      showErrorToast(error);
       throw error;
     } finally {
       setIsSaving(false);
@@ -192,8 +178,8 @@ export const UsersPage = () => {
     try {
       await usersAPI.delete(id);
       setLocalUsers(localUsers.filter((u) => u.id !== id));
-    } catch (error) {
-      console.error("Error deleting user:", error);
+    } catch (error: any) {
+      showErrorToast(error);
     }
   };
 

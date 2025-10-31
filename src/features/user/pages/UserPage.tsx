@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { ResourceManager, ResourceColumn } from '@/shared/components/resource/ResourceManager';
 import { Field } from '@/shared/components/resource/ResourceFormModal';
 import { usersAPI } from '@/features/user/services/usersAPI';
@@ -91,7 +92,8 @@ export const UsersPage = () => {
     {
       name: 'username',
       label: 'Username',
-      type: 'text'
+      type: 'text',
+      rules: { required: true, minLength: { value: 2, message: 'Minimum 2 characters.' } }
     },
     {
       name: 'email',
@@ -126,7 +128,7 @@ export const UsersPage = () => {
       label: 'Confirm password',
       type: 'password',
       placeholder: 'Repeat the password',
-      rules: {
+      rules: isEdit ? {} : {
         required: { value: true, message: 'You must confirm your password.' },
         validate: (value: string, formValues: any) =>
           value === formValues.password || 'The passwords do not match.'
@@ -143,12 +145,25 @@ export const UsersPage = () => {
       const safeUser = { ...createdUser, password: undefined };
 
       setLocalUsers([...localUsers, safeUser]);
+      toast.success('User created successfully!');
     } catch (error: any) {
-      if (error.response?.data?.errors) {
-        alert(error.response.data.errors.map((e: any) => e.msg).join('\n'));
-      } else {
-        console.error("Error creating user:", error);
-      }
+      console.log(error);
+      const errors = error.map((e: any) => e.msg);
+
+      toast.custom(
+        (t) => (
+          <div className={`bg-red-100 border border-red-400 text-red-800 p-4 rounded-md max-w-sm ${t.visible ? 'animate-enter' : 'animate-leave'}`}>
+            <strong className="block mb-1 font-semibold">There were some errors:</strong>
+            <ul className="list-disc pl-4">
+              {errors.map((msg: string, i: number) => (
+                <li key={i}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        ),
+        { duration: 5000 }
+      );
+      throw error;
     } finally {
       setIsSaving(false);
     }

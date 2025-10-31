@@ -101,7 +101,7 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/75 dark:bg-black/90 backdrop-blur-sm z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6 relative transform transition-all duration-300 scale-100 opacity-100">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-100 opacity-100">
 
         <button
           onClick={onClose}

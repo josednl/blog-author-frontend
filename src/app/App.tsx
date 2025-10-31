@@ -1,6 +1,7 @@
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Navbar from '@/shared/components/Navbar';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Outlet />
           </Suspense>
         )}
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       </main>
       {/* <Footer /> */}
     </div>

@@ -3,15 +3,18 @@ import { Menu } from 'lucide-react';
 import { Sidebar } from '@/shared/components/Sidebar';
 import { UsersPage } from '@/features/user/pages/UserPage';
 import { AccessPage } from '@/features/access/pages/AccessPage';
+import { HomePage } from '@/shared/components/HomePage';
 
-type SidebarSection = 'access' | 'users';
+type SidebarSection = 'home' | 'access' | 'users';
 
-export const AdminDashboard = () => {
-  const [activeSection, setActiveSection] = useState<SidebarSection>('access');
+export const AdminDashboard = ({ user }: any) => {
+  const [activeSection, setActiveSection] = useState<SidebarSection>('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const renderSection = () => {
     switch (activeSection) {
+      case 'home':
+        return <HomePage user={user} />;
       case 'access':
         return <AccessPage />;
       case 'users':

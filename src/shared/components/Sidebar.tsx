@@ -1,6 +1,6 @@
 import { Settings, Users, Home, X } from 'lucide-react';
 
-type SidebarSection = 'users' | 'access';
+type SidebarSection = 'home' | 'users' | 'access';
 
 type AdminSidebarProps = {
   active: SidebarSection;
@@ -8,7 +8,13 @@ type AdminSidebarProps = {
   isOpen: boolean;
   onClose: () => void;
 };
+
 const navItems = [
+  {
+    name: 'Home',
+    section: 'home' as SidebarSection,
+    icon: Home,
+  },
   {
     name: 'Access and roles',
     section: 'access' as SidebarSection,

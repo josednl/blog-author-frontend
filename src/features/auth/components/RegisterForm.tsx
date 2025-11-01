@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/features/auth/provider/AuthProvider';
 import { authAPI } from '@/features/auth/services/authAPI';
 import { useNavigate, Link } from 'react-router-dom';
+import { showErrorToast } from '@/shared/components/showErrorToast';
 
 export const RegisterForm = () => {
   const { user, loading, login } = useAuth();
@@ -34,6 +35,7 @@ export const RegisterForm = () => {
       await login({ email, password });
       navigate('/dashboard');
     } catch (err: any) {
+      showErrorToast(err)
       setError(err.response?.data?.message || 'Registration error');
     }
   };

@@ -1,6 +1,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/features/auth/provider/AuthProvider';
 import { useNavigate, Link } from 'react-router-dom';
+import { showErrorToast } from '@/shared/components/showErrorToast';
 
 export const LoginForm = () => {
   const { user, loading, login } = useAuth();
@@ -24,6 +25,8 @@ export const LoginForm = () => {
       await login({ email, password });
       navigate('/dashboard');
     } catch (err: any) {
+      console.log(err);
+      showErrorToast(err);
       setError(err.response?.data?.message || 'Login error');
     }
   };

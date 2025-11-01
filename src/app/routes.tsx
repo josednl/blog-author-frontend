@@ -5,6 +5,7 @@ import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { ProtectedRoute } from '../shared/components/ProtectedRoute';
 import { DashboardLayout } from '@/features/dashboard/DashboardLayout';
 import ErrorPage from '@/shared/components/ErrorPage';
+import { ProfilePage } from '@/features/user/pages/ProfilePage';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginForm />,
+      },
+      {
+        path: '/profile',
+        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
       },
     ]
   }

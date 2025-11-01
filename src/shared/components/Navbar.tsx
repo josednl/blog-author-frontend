@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, UserIcon } from 'lucide-react';
 import { useAuth } from '@/features/auth/provider/AuthProvider';
 
 const Navbar = () => {
@@ -33,6 +33,26 @@ const Navbar = () => {
     }
   };
 
+  const renderProfileImage = () => {
+    const imageUrl = user?.profilePicId;
+    const placeholderClasses = 'w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center';
+
+    if (imageUrl) {
+      return (
+        <img
+          src={imageUrl}
+          alt="Profile"
+          className="w-7 h-7 rounded-full object-cover border-2 border-accent dark:border-indigo-400"
+        />
+      );
+    }
+    return (
+      <div className={placeholderClasses}>
+        <UserIcon className="w-4 h-4" />
+      </div>
+    );
+  };
+
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -57,11 +77,14 @@ const Navbar = () => {
             {user ? (
               <>
                 <NavLink to='/' className={linkClasses}>Home</NavLink>
+                <NavLink to='/profile' className={({ isActive }) =>`flex items-center gap-1 ${linkClasses({ isActive })}`} title='My Profile'>
+                  {renderProfileImage()}
+                  Profile
+                </NavLink>
                 <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
                   Logout
                 </button>
               </>
-
             ) : (
               <>
                 <NavLink to='/login' className={linkClasses}>Login</NavLink>
@@ -110,6 +133,10 @@ const Navbar = () => {
             {user ? (
               <>
                 <NavLink to='/' className={linkClasses} onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+                <NavLink to='/profile' className={({ isActive }) =>`flex items-center gap-1 ${linkClasses({ isActive })}`} title='My Profile'>
+                  {renderProfileImage()}
+                  Profile
+                </NavLink>
                 <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
                   Logout
                 </button>

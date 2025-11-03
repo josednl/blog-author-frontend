@@ -2,10 +2,12 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/features/auth/provider/AuthProvider';
 import { useNavigate, Link } from 'react-router-dom';
 import { showErrorToast } from '@/shared/components/showErrorToast';
+import { useGlobalLoading } from '@/shared/components/LoadingProvider';
 
 export const LoginForm = () => {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useGlobalLoading();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +22,7 @@ export const LoginForm = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    showLoading('Verifying credentials...');
 
     try {
       await login({ email, password });
@@ -28,6 +31,8 @@ export const LoginForm = () => {
       console.log(err);
       showErrorToast(err);
       setError(err.response?.data?.message || 'Login error');
+    } finally {
+      hideLoading();
     }
   };
 

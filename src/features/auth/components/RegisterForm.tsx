@@ -3,10 +3,12 @@ import { useAuth } from '@/features/auth/provider/AuthProvider';
 import { authAPI } from '@/features/auth/services/authAPI';
 import { useNavigate, Link } from 'react-router-dom';
 import { showErrorToast } from '@/shared/components/showErrorToast';
+import { useGlobalLoading } from '@/shared/components/LoadingProvider';
 
 export const RegisterForm = () => {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useGlobalLoading();
 
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -24,6 +26,7 @@ export const RegisterForm = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    showLoading('Creating new user...');
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -37,6 +40,8 @@ export const RegisterForm = () => {
     } catch (err: any) {
       showErrorToast(err)
       setError(err.response?.data?.message || 'Registration error');
+    } finally {
+      hideLoading();
     }
   };
 

@@ -11,7 +11,9 @@ export const ProfilePage = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [profile, setProfile] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
   const fetchData = async () => {
     if (!user) return;
@@ -19,6 +21,7 @@ export const ProfilePage = () => {
       setIsLoading(true);
       const data = await usersAPI.getById(user.id);
       setProfile(data);
+      setPreviewUrl(data.profilePicUrl);
     } catch (error: any) {
       showErrorToast(error);
     } finally {
@@ -35,15 +38,36 @@ export const ProfilePage = () => {
     setProfile({ ...profile, [field]: value });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     try {
       setIsSaving(true);
+
+      if (pendingFile) {
+        if (profile.profilePicId) {
+          await usersAPI.deleteProfileImage(profile.profilePicId);
+        }
+        const formData = new FormData();
+        formData.append('image', pendingFile);
+        const { imageUrl, imageId } = await usersAPI.uploadProfileImage(formData);
+        profile.profilePicId = imageId;
+        setPreviewUrl(imageUrl);
+        setPendingFile(null);
+      }
+
       const updated = await usersAPI.update(profile.id, {
         name: profile.name,
         username: profile.username,
         email: profile.email,
         bio: profile.bio,
+        profilePicId: profile.profilePicId,
       });
       setProfile(updated);
       showSuccessToast('Profile updated successfully.');
@@ -73,8 +97,7 @@ export const ProfilePage = () => {
     );
   }
 
-  const profileImageUrl =
-    profile.profilePicId || 'https://via.placeholder.com/150?text=No+Photo';
+  const profileImageUrl = previewUrl || profile.profilePicUrl || 'https://via.placeholder.com/150?text=No+Photo';
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg">
@@ -94,9 +117,16 @@ export const ProfilePage = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          <button className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors flex items-center">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="upload-photo"
+            onChange={handleFileChange}
+          />
+          <label htmlFor='upload-photo' className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors flex items-center">
             <ImageIcon className="w-4 h-4 mr-2" /> Upload New Photo
-          </button>
+          </label>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             JPG or PNG. Max 5MB.
           </p>

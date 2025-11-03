@@ -14,15 +14,27 @@ export const usersAPI = {
 
   async create(data: User) {
     try {
-    const response = await apiClient.post('/users', data);
+      const response = await apiClient.post('/users', data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  async uploadProfileImage (formData: FormData) {
+    const response = await apiClient.post('/images/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
-  } catch (error: any) {
-    throw error;
-  }
   },
 
   async update(id: string, data: Partial<User>) {
     const response = await apiClient.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  async deleteProfileImage(id: string) {
+    const response = await apiClient.delete(`/images/${id}`);
     return response.data;
   },
 

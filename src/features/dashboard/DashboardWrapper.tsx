@@ -13,7 +13,7 @@ export const DashboardLayout = () => {
     case 'admin':
       return <AdminDashboard user={user} />;
     case 'editor':
-      return <EditorDashboard />;
+      return <EditorDashboard user={user} />;
     default:
       return <UnauthorizedPage />;
   }

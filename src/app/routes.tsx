@@ -3,7 +3,7 @@ import App from '@/app/App';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
-import { DashboardLayout } from '@/features/dashboard/DashboardLayout';
+import { DashboardLayout } from '@/features/dashboard/DashboardWrapper';
 import ErrorPage from '@/shared/components/ErrorPage';
 import { ProfilePage } from '@/features/user/pages/ProfilePage';
 

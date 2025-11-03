@@ -1,33 +1,20 @@
-import { Settings, Users, Home, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
-type SidebarSection = 'home' | 'users' | 'access';
+export type SidebarItem = {
+  name: string;
+  key: string;
+  icon: React.ElementType;
+};
 
-type AdminSidebarProps = {
-  active: SidebarSection;
-  onChange: (section: SidebarSection) => void;
+type SidebarProps = {
+  activeKey: string;
+  items: SidebarItem[];
+  onChange: (key: string) => void;
   isOpen: boolean;
   onClose: () => void;
 };
 
-const navItems = [
-  {
-    name: 'Home',
-    section: 'home' as SidebarSection,
-    icon: Home,
-  },
-  {
-    name: 'Access and roles',
-    section: 'access' as SidebarSection,
-    icon: Settings,
-  },
-  {
-    name: 'Users',
-    section: 'users' as SidebarSection,
-    icon: Users,
-  },
-];
-
-export const Sidebar = ({ active, onChange, isOpen, onClose }: AdminSidebarProps) => {
+export const Sidebar = ({ activeKey, items, onChange, isOpen, onClose }: SidebarProps) => {
 
   const baseClasses = 'flex items-center p-3 rounded-lg transition-all duration-200 text-sm font-medium';
 
@@ -58,14 +45,14 @@ export const Sidebar = ({ active, onChange, isOpen, onClose }: AdminSidebarProps
         </div>
 
         <nav className="space-y-2 flex-grow">
-          {navItems.map((item) => {
-            const isActive = active === item.section;
+          {items.map((item) => {
+            const isActive = activeKey === item.key;
             const Icon = item.icon;
 
             return (
               <button
-                key={item.section}
-                onClick={() => onChange(item.section)}
+                key={item.key}
+                onClick={() => onChange(item.key)}
                 className={`${baseClasses} w-full text-left focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50`}
                 aria-current={isActive ? 'page' : undefined}
               >
@@ -83,17 +70,6 @@ export const Sidebar = ({ active, onChange, isOpen, onClose }: AdminSidebarProps
             );
           })}
         </nav>
-
-        {/* <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-            <button
-                onClick={() => console.log('Back to Home')}
-                className={`${baseClasses} w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`}
-            >
-                <Home className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400" />
-                <span>Back to Home</span>
-            </button>
-        </div> */}
-
       </div>
     </aside>
   );

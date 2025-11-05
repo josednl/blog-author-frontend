@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export type PostContentBlock =
   | { type: 'paragraph'; content: string }
-  | { type: 'image'; id: string };
+  | { type: 'image'; id?: string; file?: File };
 
 export type PostContent = PostContentBlock[];
 
@@ -14,6 +14,10 @@ interface PostEditorProps {
 export const PostEditor = ({ value, onChange }: PostEditorProps) => {
   const [blocks, setBlocks] = useState<PostContent>(value);
 
+  useEffect(() => {
+    setBlocks(value);
+  }, [value]);
+
   const updateBlocks = (newBlocks: PostContent) => {
     setBlocks(newBlocks);
     onChange(newBlocks);
@@ -23,15 +27,16 @@ export const PostEditor = ({ value, onChange }: PostEditorProps) => {
     updateBlocks([...blocks, { type: 'paragraph', content: '' }]);
   };
 
-  const addImage = () => {
-    const imageId = prompt('Enter the image ID:');
-    if (imageId) updateBlocks([...blocks, { type: 'image', id: imageId }]);
+  const addImage = (file: File) => {
+    updateBlocks([...blocks, { type: 'image', file }]);
   };
 
   const updateParagraph = (index: number, newContent: string) => {
     const newBlocks = [...blocks];
-    (newBlocks[index] as { type: 'paragraph'; content: string }).content = newContent;
-    updateBlocks(newBlocks);
+    if (newBlocks[index].type === 'paragraph') {
+      newBlocks[index] = { ...newBlocks[index], content: newContent };
+      updateBlocks(newBlocks);
+    }
   };
 
   const removeBlock = (index: number) => {
@@ -48,16 +53,25 @@ export const PostEditor = ({ value, onChange }: PostEditorProps) => {
               value={block.content}
               onChange={(e) => updateParagraph(i, e.target.value)}
               placeholder="Write your text here..."
-              className="w-full p-2 border-none focus:ring-0 resize-none"
+              className="w-full p-2 border-none focus:ring-0 outline-none resize-none"
             />
           ) : (
             <div className="flex flex-col items-center">
-              <img
-                src={`/images/${block.id}`}
-                alt={`Image ${block.id}`}
-                className="max-w-full rounded"
-              />
-              <span className="text-xs text-gray-500 mt-1">{block.id}</span>
+              {block.file ? (
+                <img
+                  src={URL.createObjectURL(block.file)}
+                  alt="Preview"
+                  className="max-w-full rounded"
+                />
+              ) : block.id ? (
+                <img
+                  src={`/images/${block.id}`}
+                  alt={`Image ${block.id}`}
+                  className="max-w-full rounded"
+                />
+              ) : (
+                <span className="text-gray-500 text-sm">Pending upload...</span>
+              )}
             </div>
           )}
           <button
@@ -76,12 +90,12 @@ export const PostEditor = ({ value, onChange }: PostEditorProps) => {
         >
           + Text
         </button>
-        <button
-          onClick={addImage}
-          className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
-        >
-          + Image
-        </button>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => e.target.files && addImage(e.target.files[0])}
+          className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded cursor-pointer"
+        />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { PostEditor, PostContent } from '../components/Editor';
 import { showSuccessToast } from '@/shared/components/showSuccessToast';
 import { showErrorToast } from '@/shared/components/showErrorToast';
 import { postsAPI } from '../services/postsAPI';
+import type { PostContent as ApiPostContent, PostContentBlock as ApiPostContentBlock } from '../types/postTypes';
 
 type Props = {
   userId: string;
@@ -19,18 +20,38 @@ export const NewPostPage = ({ userId }: Props) => {
       return;
     }
 
-    const newPost = {
-      title,
-      content,
-      published: false,
-      authorId: userId,
-    };
-
     try {
       setLoading(true);
-      console.group(newPost);
-      const saved = await postsAPI.create(newPost);
-      console.log('Post saved:', saved);
+      const postPayload = { title, content: [], published: false, authorId: userId };
+      const savedPost = await postsAPI.create(postPayload);
+      const postId = savedPost.data.id;
+
+      const updatedContent: PostContent = await Promise.all(
+        content.map(async (block) => {
+          if (block.type === 'paragraph') return block;
+
+          if (block.type === 'image' && block.file) {
+            const formData = new FormData();
+            formData.append('image', block.file);
+            formData.append('postId', postId);
+
+            const imageResp = await postsAPI.uploadImage(formData);
+            return { type: 'image', id: imageResp.imageId };
+          }
+
+          return block;
+        })
+      );
+
+      const apiContent: ApiPostContent = updatedContent.map((block) => {
+        if (block.type === 'image') {
+          return { type: 'image', id: (block as any).id! } as ApiPostContentBlock;
+        }
+        return block as unknown as ApiPostContentBlock;
+      });
+
+      await postsAPI.update(postId, { content: apiContent });
+
       showSuccessToast('Post created successfully');
     } catch (error) {
       console.error('Error creating post: ', error);

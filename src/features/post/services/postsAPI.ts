@@ -21,4 +21,18 @@ export const postsAPI = {
     const response = await apiClient.delete(`/posts/${id}`);
     return response.data;
   },
+
+  async uploadImage(formData: FormData) {
+    formData.append('type', 'POST');
+    
+    const response = await apiClient.post('/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  async deleteImage(imageId: string) {
+    const response = await apiClient.delete(`/images/${imageId}`);
+    return response.data;
+  },
 };

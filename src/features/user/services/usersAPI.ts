@@ -22,7 +22,8 @@ export const usersAPI = {
   },
 
   async uploadProfileImage (formData: FormData) {
-    const response = await apiClient.post('/images/profile', formData, {
+    formData.append('type', 'PROFILE');
+    const response = await apiClient.post('/images', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;

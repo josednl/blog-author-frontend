@@ -12,6 +12,7 @@ type Props = {
 export const NewPostPage = ({ userId }: Props) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<PostContent>([]);
+  const [published, setPublished] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -22,7 +23,7 @@ export const NewPostPage = ({ userId }: Props) => {
 
     try {
       setLoading(true);
-      const postPayload = { title, content: [], published: false, authorId: userId };
+      const postPayload = { title, content: [], published, authorId: userId };
       const savedPost = await postsAPI.create(postPayload);
       const postId = savedPost.data.id;
 
@@ -52,7 +53,9 @@ export const NewPostPage = ({ userId }: Props) => {
 
       await postsAPI.update(postId, { content: apiContent });
 
-      showSuccessToast('Post created successfully');
+      showSuccessToast(published ? 'Post published successfully!' : 'Draft saved successfully!');
+      setTitle('');
+      setContent([]);
     } catch (error) {
       console.error('Error creating post: ', error);
       showErrorToast('Error creating post');
@@ -76,11 +79,22 @@ export const NewPostPage = ({ userId }: Props) => {
       <PostEditor value={content} onChange={setContent} />
 
       <button
+        type="button"
+        onClick={() => setPublished(!published)}
+        className={`px-3 py-1 rounded ${published
+          ? 'bg-green-600 text-white hover:bg-green-700'
+          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+          }`}
+      >
+        {published ? 'Published ✓' : 'Save as draft'}
+      </button>
+
+      <button
         onClick={handleSubmit}
         disabled={loading}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? 'Saving...' : 'Publish'}
+        {loading ? 'Saving...' : 'Save'}
       </button>
     </div>
   );

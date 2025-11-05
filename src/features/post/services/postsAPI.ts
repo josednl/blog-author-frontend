@@ -2,6 +2,12 @@ import apiClient from '@/shared/api/apiClient';
 import { Post } from '../types/postTypes';
 
 export const postsAPI = {
+
+  async getAllByUser(userId: string) {
+    const response = await apiClient.get(`/posts/user/${userId}`);
+    return response.data;
+  },
+
   async create(data: Omit<Post, 'id'>) {
     try {
       const response = await apiClient.post('/posts', data);
@@ -24,7 +30,7 @@ export const postsAPI = {
 
   async uploadImage(formData: FormData) {
     formData.append('type', 'POST');
-    
+
     const response = await apiClient.post('/images', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

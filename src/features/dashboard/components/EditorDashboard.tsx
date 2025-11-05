@@ -1,6 +1,7 @@
 import { DashboardLayout } from '@/features/dashboard/pages/DashboardLayout';
 import { Home, Newspaper, FilePlus } from 'lucide-react';
 import { HomePage } from '@/shared/components/HomePage';
+import { NewPostPage } from '@/features/post/pages/NewPostPage';
 
 export const EditorDashboard = ({ user }: any) => {
   const sidebarItems = [
@@ -13,7 +14,7 @@ export const EditorDashboard = ({ user }: any) => {
     switch (key) {
       case 'home': return <HomePage user={user} />;
       case 'posts': return '<ManagePostsPage />';
-      case 'new': return '<NewPostPage />';
+      case 'new': return <NewPostPage userId={user.id}  />;
       default: return <div className="p-4 text-gray-500">Select a section.</div>;
     }
   };

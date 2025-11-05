@@ -82,12 +82,12 @@ const Navbar = () => {
                   Profile
                 </NavLink>
                 <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
-                  Logout
+                  Log out
                 </button>
               </>
             ) : (
               <>
-                <NavLink to='/login' className={linkClasses}>Login</NavLink>
+                <NavLink to='/login' className={linkClasses}>Log in</NavLink>
                 <NavLink to='/register' className={linkClasses}>
                   Register
                 </NavLink>
@@ -138,13 +138,13 @@ const Navbar = () => {
                   Profile
                 </NavLink>
                 <button onClick={handleLogout} className='px-3 py-1 rounded-md bg-accent text-dark font-medium hover:opacity-90 transition'>
-                  Logout
+                  Log out
                 </button>
               </>
 
             ) : (
               <>
-                <NavLink to='/login' className={linkClasses}>Login</NavLink>
+                <NavLink to='/login' className={linkClasses}>Log in</NavLink>
                 <NavLink to='/register' className={linkClasses}>
                   Register
                 </NavLink>

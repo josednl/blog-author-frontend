@@ -1,14 +1,34 @@
-export type PostContentBlock =
-  | { type: 'paragraph'; content: string }
-  | { type: 'image'; id: string };
+export type ApiParagraphBlock = {
+  type: 'paragraph';
+  content: string;
+};
 
-export type PostContent = PostContentBlock[];
+export type ApiImageBlock = {
+  type: 'image';
+  id: string;
+};
+
+export type ApiStoredContentBlock = ApiParagraphBlock | ApiImageBlock;
+export type ApiPostContent = ApiStoredContentBlock[];
 
 export type Post = {
   id: string;
   title: string;
-  content: PostContent;
-  published?: boolean;
-  authorId?: string;
-  createdAt?: string;
+  published: boolean;
+  content: ApiPostContent;
 };
+
+export type EditorParagraphBlock = {
+  type: 'paragraph';
+  keyId: string;
+  content: string;
+};
+
+export type EditorImageBlock = {
+  type: 'image';
+  keyId: string;
+  id?: string;
+  file?: File;
+};
+
+export type EditorPostContent = (EditorParagraphBlock | EditorImageBlock)[];

@@ -1,63 +1,82 @@
 import { useState } from 'react';
-import { PostEditor, PostContent } from '../components/Editor';
+import { PostEditor } from '../components/Editor';
 import { showSuccessToast } from '@/shared/components/showSuccessToast';
 import { showErrorToast } from '@/shared/components/showErrorToast';
 import { postsAPI } from '../services/postsAPI';
-import type { PostContent as ApiPostContent, PostContentBlock as ApiPostContentBlock } from '../types/postTypes';
+import type {
+  Post,
+  ApiPostContent,
+  ApiStoredContentBlock,
+  EditorPostContent,
+  EditorImageBlock,
+} from '../types/postTypes';
 
 type Props = {
   userId: string;
-}
+};
+
+const isImageWithFile = (block: EditorPostContent[number]): block is EditorImageBlock & { file: File } =>
+  block.type === 'image' && block.file instanceof File;
 
 export const NewPostPage = ({ userId }: Props) => {
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState<PostContent>([]);
-  const [published, setPublished] = useState(false);
+  const [content, setContent] = useState<EditorPostContent>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (publish: boolean) => {
     if (!title.trim()) {
       alert('The title cannot be empty.');
       return;
     }
 
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const postPayload = { title, content: [], published, authorId: userId };
-      const savedPost = await postsAPI.create(postPayload);
-      const postId = savedPost.data.id;
+      const initialPayload = {
+        title,
+        content: [] as ApiPostContent,
+        published: publish,
+        authorId: userId,
+      };
 
-      const updatedContent: PostContent = await Promise.all(
-        content.map(async (block) => {
-          if (block.type === 'paragraph') return block;
+      const createdPost = await postsAPI.create(initialPayload);
+      const postId = createdPost.id ?? createdPost.data?.id;
 
-          if (block.type === 'image' && block.file) {
-            const formData = new FormData();
-            formData.append('image', block.file);
-            formData.append('postId', postId);
+      if (!postId) throw new Error('Post ID was not returned by the API.');
 
-            const imageResp = await postsAPI.uploadImage(formData);
-            return { type: 'image', id: imageResp.imageId };
-          }
+      const apiContent: ApiPostContent = (
+        await Promise.all(
+          content.map(async (block): Promise<ApiStoredContentBlock | null> => {
+            if (block.type === 'paragraph') {
+              return { type: 'paragraph', content: block.content };
+            }
 
-          return block;
-        })
-      );
+            if (isImageWithFile(block)) {
+              const formData = new FormData();
+              formData.append('image', block.file);
+              formData.append('postId', postId);
 
-      const apiContent: ApiPostContent = updatedContent.map((block) => {
-        if (block.type === 'image') {
-          return { type: 'image', id: (block as any).id! } as ApiPostContentBlock;
-        }
-        return block as unknown as ApiPostContentBlock;
-      });
+              const { imageId } = await postsAPI.uploadImage(formData);
+              return { type: 'image', id: imageId };
+            }
 
-      await postsAPI.update(postId, { content: apiContent });
+            if (block.type === 'image' && block.id) {
+              return { type: 'image', id: block.id };
+            }
 
-      showSuccessToast(published ? 'Post published successfully!' : 'Draft saved successfully!');
+            return null;
+          })
+        )
+      ).filter((b): b is ApiStoredContentBlock => b !== null);
+
+      await postsAPI.update(postId, { content: apiContent, published: publish });
+
+      showSuccessToast(publish ? 'Post published successfully!' : 'Draft saved successfully!');
+
       setTitle('');
       setContent([]);
     } catch (error) {
-      console.error('Error creating post: ', error);
+      console.error('Error creating post:', error);
       showErrorToast('Error creating post');
     } finally {
       setLoading(false);
@@ -73,29 +92,29 @@ export const NewPostPage = ({ userId }: Props) => {
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full p-2 border rounded"
+        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+        disabled={loading}
       />
 
-      <PostEditor value={content} onChange={setContent} />
+      <PostEditor value={content} onChange={setContent} readOnly={loading} />
 
-      <button
-        type="button"
-        onClick={() => setPublished(!published)}
-        className={`px-3 py-1 rounded ${published
-          ? 'bg-green-600 text-white hover:bg-green-700'
-          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-          }`}
-      >
-        {published ? 'Published ✓' : 'Save as draft'}
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={() => handleSubmit(false)}
+          disabled={loading}
+          className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 disabled:opacity-50 transition"
+        >
+          {loading ? 'Processing...' : 'Save as Draft'}
+        </button>
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? 'Saving...' : 'Save'}
-      </button>
+        <button
+          onClick={() => handleSubmit(true)}
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition"
+        >
+          {loading ? 'Processing...' : 'Publish Post'}
+        </button>
+      </div>
     </div>
   );
 };

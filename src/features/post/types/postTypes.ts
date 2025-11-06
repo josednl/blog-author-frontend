@@ -5,7 +5,7 @@ export type PostContentBlock =
 export type PostContent = PostContentBlock[];
 
 export type Post = {
-  id?: string;
+  id: string;
   title: string;
   content: PostContent;
   published?: boolean;

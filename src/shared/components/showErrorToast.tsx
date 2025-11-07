@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 
 export const showErrorToast = (error: any) => {
-  let rawErrors: any = null;
+  let rawErrors: any[] = [];
   let messages: string[] = [];
 
   if (Array.isArray(error)) {
@@ -12,19 +12,25 @@ export const showErrorToast = (error: any) => {
     rawErrors = error.errors;
   }
 
-  if (Array.isArray(rawErrors) && rawErrors.length > 0) {
+  if (rawErrors.length > 0) {
     messages = rawErrors.map((err: any) => {
       return (
-        err.msg ||
-        err.message ||
+        err.msg || 
+        err.message || 
         err.error || 
+        JSON.stringify(err) || 
         'Unknown error'
       );
     });
+  } 
+  else if (typeof error?.response?.data?.error === 'string') {
+    messages = [error.response.data.error];
   } else if (typeof error?.response?.data?.message === 'string') {
     messages = [error.response.data.message];
   } else if (typeof error?.message === 'string') {
     messages = [error.message];
+  } else if (typeof error === 'string') {
+    messages = [error];
   } else {
     messages = ['An unexpected error occurred'];
   }

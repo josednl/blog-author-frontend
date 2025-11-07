@@ -76,8 +76,8 @@ export const NewPostPage = ({ userId }: Props) => {
       setTitle('');
       setContent([]);
     } catch (error) {
-      console.error('Error creating post:', error);
-      showErrorToast('Error creating post');
+      // console.error('Error creating post:', error);
+      showErrorToast(error);
     } finally {
       setLoading(false);
     }

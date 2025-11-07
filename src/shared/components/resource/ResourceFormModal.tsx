@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useForm, RegisterOptions, FieldError, FieldPath } from 'react-hook-form';
+import { X } from 'lucide-react';
 
 type FieldOption = string | { label: string; value: string };
 
@@ -23,15 +24,13 @@ type Props = {
 
 const preprocessItem = (item: Record<string, any> | null, fields: Field[]): Record<string, any> => {
   if (!item) return {};
-
   const processed: Record<string, any> = { ...item };
 
-  fields.forEach(field => {
+  fields.forEach((field) => {
     if (field.type === 'checkbox-group') {
       const value = item[field.name];
-      
       if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'id' in value[0]) {
-        processed[field.name] = value.map(obj => obj.id);
+        processed[field.name] = value.map((obj) => obj.id);
       }
     }
   });
@@ -39,9 +38,16 @@ const preprocessItem = (item: Record<string, any> | null, fields: Field[]): Reco
   return processed;
 };
 
-export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSaving = false }: Props) => {
+export const ResourceFormModal = ({
+  item,
+  isEdit,
+  onClose,
+  onSave,
+  fields,
+  isSaving = false,
+}: Props) => {
   const defaultValues = useMemo(() => preprocessItem(item || null, fields), [item, fields]);
-  
+
   const {
     register,
     handleSubmit,
@@ -50,24 +56,18 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues: defaultValues || {} });
 
-  
   useEffect(() => {
     reset(defaultValues || {});
   }, [defaultValues, reset]);
 
   const onSubmit = async (data: Record<string, any>) => {
     if (isSaving) return;
-
     try {
       await onSave(data);
-
       onClose();
-
     } catch (error: any) {
       console.error('Submission failed:', error);
-
       if (error.errors && typeof error.errors === 'object') {
-
         Object.keys(error.errors).forEach((fieldName) => {
           setError(fieldName as FieldPath<any>, {
             type: 'server',
@@ -80,7 +80,6 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
 
   const renderErrorMessage = (error: FieldError | undefined) => {
     if (!error) return null;
-
     switch (error.type) {
       case 'required':
         return 'This field is required.';
@@ -100,19 +99,19 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/75 dark:bg-black/90 backdrop-blur-sm z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-100 opacity-100">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/70 dark:bg-black/80 backdrop-blur-sm z-50 p-4 animate-fadeIn">
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-light dark:bg-dark rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700 transition-transform duration-300 scale-100">
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
           aria-label="Close modal"
         >
-          <span className="text-2xl">✕</span>
+          <X size={22} />
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          {item ? 'Edit' : 'Add'} {fields.length > 0 ? fields[0].label.slice(0, -1) : 'resource'}
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-light">
+          {isEdit ? 'Edit' : 'Add'} {fields.length > 0 ? fields[0].label.replace(/s$/, '') : 'resource'}
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -126,21 +125,22 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
                   htmlFor={field.name}
                   className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  {field.label} {field.rules?.required && <span className="text-red-500">*</span>}
+                  {field.label}
+                  {field.rules?.required && <span className="text-red-500 ml-0.5">*</span>}
                 </label>
 
                 {field.type === 'checkbox-group' ? (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                     {(field.options || []).map((opt) => {
                       const value = typeof opt === 'string' ? opt : opt.value;
                       const label = typeof opt === 'string' ? opt : opt.label;
                       return (
-                        <label key={value} className="inline-flex items-center space-x-2">
+                        <label key={value} className="inline-flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
                             value={value}
                             {...register(field.name)}
-                            className="rounded border-gray-300 dark:border-gray-600 text-accent focus:ring-accent"
+                            className="rounded border-gray-300 dark:border-gray-500 text-accent focus:ring-accent"
                           />
                           <span className="text-gray-800 dark:text-gray-200">{label}</span>
                         </label>
@@ -153,15 +153,15 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
                     placeholder={field.placeholder}
                     {...register(field.name, field.rules)}
                     rows={4}
-                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all focus:ring-accent 
-                      ${isInvalid ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-accent'}`}
+                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-accent focus:border-accent transition-all 
+                      ${isInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                   />
                 ) : field.type === 'select' ? (
                   <select
                     id={field.name}
                     {...register(field.name, field.rules)}
-                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none transition-all 
-                      ${isInvalid ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-accent'}`}
+                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-accent focus:border-accent transition-all appearance-none 
+                      ${isInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                   >
                     <option value="" disabled>
                       {field.placeholder || `Select a ${field.label.toLowerCase()}`}
@@ -182,8 +182,8 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
                     type={field.type || 'text'}
                     placeholder={field.placeholder}
                     {...register(field.name, field.rules)}
-                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all focus:ring-2 focus:ring-accent 
-                      ${isInvalid ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-accent'}`}
+                    className={`w-full px-4 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-accent focus:border-accent transition-all 
+                      ${isInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                   />
                 )}
 
@@ -196,27 +196,21 @@ export const ResourceFormModal = ({ item, isEdit, onClose, onSave, fields, isSav
             );
           })}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-6 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="px-5 py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving || isSubmitting}
-              className="px-6 py-2 bg-accent text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors shadow-md disabled:opacity-50 flex items-center justify-center"
+              className="px-6 py-2 rounded-lg font-semibold bg-accent text-white hover:brightness-110 transition disabled:opacity-50 shadow-md shadow-accent/40"
             >
-              {isSaving ? (
-                <>
-                  Saving...
-                </>
-              ) : (
-                'Save changes'
-              )}
+              {isSaving ? 'Saving...' : 'Save changes'}
             </button>
           </div>
         </form>

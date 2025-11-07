@@ -4,18 +4,18 @@ import { showErrorToast } from '@/shared/components/showErrorToast';
 import { showSuccessToast } from '@/shared/components/showSuccessToast';
 import type { Post, ApiPostContent, EditorPostContent } from '../types/postTypes';
 import { ReloadButton } from '@/shared/components/ReloadButton';
-import { ImageIcon, Edit2, Trash2, X } from 'lucide-react';
+import { ImageIcon, Edit2, Trash2, X, AlertTriangle } from 'lucide-react';
 import { PostEditor } from '../components/Editor';
 import { apiToEditorContent, editorToApiContent, getImageIds } from '../utils/postUtils';
 import { isEditorImageWithId } from '../utils/blockGuards';
 
 type Props = { userId: string };
-
 type EditingPostState = Omit<Post, 'content'> & { content: EditorPostContent };
 
 export const ManagePostPage = ({ userId }: Props) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<EditingPostState | null>(null);
   const [originalContent, setOriginalContent] = useState<ApiPostContent | null>(null);
@@ -26,7 +26,7 @@ export const ManagePostPage = ({ userId }: Props) => {
       const response = await postsAPI.getAllByUser(userId);
       setPosts(response);
     } catch {
-      showErrorToast('Failed to load posts');
+      showErrorToast('Error loading posts');
     } finally {
       setIsLoading(false);
     }
@@ -37,14 +37,14 @@ export const ManagePostPage = ({ userId }: Props) => {
   }, [userId]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this post?')) return;
+    if (!confirm('Are you sure you want to delete this post?')) return;
     try {
       setDeletingId(id);
       await postsAPI.delete(id);
-      showSuccessToast('Post deleted');
+      showSuccessToast('Post successfully deleted');
       setPosts((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      showErrorToast('Failed to delete post');
+      showErrorToast('Error deleting post');
     } finally {
       setDeletingId(null);
     }
@@ -63,11 +63,10 @@ export const ManagePostPage = ({ userId }: Props) => {
   const handleSave = async (updated: EditingPostState) => {
     if (!originalContent) return;
     try {
-      setIsLoading(true);
+      setIsSaving(true);
 
       const prevImageIds = getImageIds(originalContent);
-      const newImageIds = updated.content.filter(isEditorImageWithId).map(b => b.id);
-      
+      const newImageIds = updated.content.filter(isEditorImageWithId).map((b) => b.id);
       const removedImages = prevImageIds.filter((id) => !newImageIds.includes(id));
 
       await Promise.all(removedImages.map((id) => postsAPI.deleteImage(id)));
@@ -81,149 +80,180 @@ export const ManagePostPage = ({ userId }: Props) => {
       };
 
       const savedPost = await postsAPI.update(updated.id, payload);
-      showSuccessToast('Post updated successfully');
+      showSuccessToast('Post successfully updated');
 
       setPosts((prev) => prev.map((p) => (p.id === savedPost.id ? savedPost : p)));
       handleCancelEdit();
     } catch (err) {
-      console.error(err);
-      showErrorToast('Failed to update post');
+      // console.error(err);
+      showErrorToast(err);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  if (isLoading && posts.length === 0)
-    return <div className="text-center text-gray-500 p-8">Loading posts...</div>;
+  const isOperationInProgress = isLoading || isSaving;
 
-  if (posts.length === 0)
+  if (isLoading && posts.length === 0)
     return (
-      <div className="text-center text-gray-500 p-8">
-        You don’t have any posts yet.
+      <div className="flex items-center justify-center min-h-[60vh] text-gray-500 dark:text-gray-400 text-lg">
+        Loading posts...
+      </div>
+    );
+
+  if (posts.length === 0 && !isLoading)
+    return (
+      <div className="flex flex-col items-center text-center p-8 space-y-4 rounded-2xl bg-light/60 dark:bg-dark/70 max-w-md mx-auto border border-dashed border-gray-300 dark:border-gray-700">
+        <AlertTriangle size={36} className="text-accent" />
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+          You don’t have any posts yet
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Create your first post to see it listed here.
+        </p>
         <ReloadButton onClick={fetchData} isLoading={isLoading} />
       </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Your Posts</h1>
+    <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 min-h-screen transition-colors duration-300">
+
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-5 mb-6 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-light">
+          Content Manager
+        </h1>
         <ReloadButton onClick={fetchData} isLoading={isLoading} />
       </header>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {posts.map((post) => {
           const imageCount = post.content.filter((b) => b.type === 'image').length;
           const isDeleting = deletingId === post.id;
-          return (
-            <div
-              key={post.id}
-              className="rounded-lg border bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between"
-            >
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">
-                  {post.title || 'Untitled'}
-                </h2>
-                <p className={`text-sm ${post.published ? 'text-green-600' : 'text-gray-500'}`}>
-                  {post.published ? 'Published' : 'Draft'}
-                </p>
-              </div>
+          const isDraft = !post.published;
 
-              <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <ImageIcon size={16} className="text-gray-400" />
+          const statusClasses = isDraft
+            ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+            : 'bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-300';
+
+          return (
+            <article
+              key={post.id}
+              className="rounded-xl bg-light dark:bg-dark shadow-md hover:shadow-lg transition-all duration-300 border border-transparent hover:border-accent/50 flex flex-col"
+            >
+              <div className="p-5 flex-grow">
+                <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full mb-3 ${statusClasses}`}>
+                  {isDraft ? 'Draft' : 'Published'}
+                </span>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 mb-3">
+                  {post.title || 'Untitled post'}
+                </h2>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <ImageIcon size={16} className="text-accent" />
                   <span>{imageCount} {imageCount === 1 ? 'image' : 'images'}</span>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditClick(post)}
-                    disabled={isDeleting || isLoading}
-                    className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded hover:bg-blue-100 disabled:opacity-50"
-                  >
-                    <Edit2 size={14} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    disabled={isDeleting || isLoading}
-                    className={`flex items-center gap-1 px-3 py-1 rounded ${isDeleting
-                        ? 'bg-red-100 text-red-400 cursor-not-allowed'
-                        : 'bg-red-50 text-red-700 hover:bg-red-100'
-                      }`}
-                  >
-                    <Trash2 size={14} />
-                    <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
-                  </button>
-                </div>
               </div>
-            </div>
+
+              <div className="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => handleEditClick(post)}
+                  disabled={isDeleting || isOperationInProgress}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent text-white font-semibold text-sm shadow-md hover:brightness-110 transition disabled:opacity-50"
+                >
+                  <Edit2 size={16} /> Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(post.id)}
+                  disabled={isDeleting || isOperationInProgress}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold text-sm transition ${
+                    isDeleting
+                      ? 'bg-red-200 text-red-600 cursor-not-allowed'
+                      : 'bg-red-500 hover:bg-red-600 text-white'
+                  }`}
+                >
+                  <Trash2 size={16} />
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </article>
           );
         })}
-      </div>
+      </section>
 
       {editingPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative sm:p-8">
-            <button
-              onClick={handleCancelEdit}
-              disabled={isLoading}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-            >
-              <X size={20} />
-            </button>
-
-            <h2 className="text-xl font-semibold mb-4">Edit Post: {editingPost.title}</h2>
-
-            <input
-              type="text"
-              value={editingPost.title}
-              onChange={(e) => setEditingPost((p) => (p ? { ...p, title: e.target.value } : null))}
-              className="w-full p-2 border rounded mb-4 dark:bg-gray-700 dark:text-white"
-              disabled={isLoading}
-            />
-
-            <div className="mb-4 flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="published"
-                checked={editingPost.published}
-                onChange={(e) =>
-                  setEditingPost((p) => (p ? { ...p, published: e.target.checked } : null))
-                }
-                disabled={isLoading}
-              />
-              <label htmlFor="published" className="text-gray-700 dark:text-gray-200">
-                Published
-              </label>
-            </div>
-
-            <PostEditor
-              value={editingPost.content}
-              onChange={(newContent) =>
-                setEditingPost((p) => (p ? { ...p, content: newContent } : null))
-              }
-              readOnly={isLoading}
-            />
-
-            <div className="flex justify-end mt-4 gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 dark:bg-black/80 backdrop-blur-sm p-4 transition-opacity">
+          <div className="bg-light dark:bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+            
+            <div className="sticky top-0 p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-inherit">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                Editing: {editingPost.title || 'Untitled'}
+              </h2>
               <button
                 onClick={handleCancelEdit}
-                disabled={isLoading}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                disabled={isSaving}
+                className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-full transition"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-grow p-5 space-y-5">
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Post title</span>
+                <input
+                  type="text"
+                  value={editingPost.title}
+                  onChange={(e) =>
+                    setEditingPost((p) => (p ? { ...p, title: e.target.value } : null))
+                  }
+                  placeholder="Write the title..."
+                  disabled={isSaving}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition"
+                />
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="published"
+                  checked={editingPost.published}
+                  onChange={(e) =>
+                    setEditingPost((p) => (p ? { ...p, published: e.target.checked } : null))
+                  }
+                  disabled={isSaving}
+                  className="h-4 w-4 text-accent border-gray-300 rounded focus:ring-accent dark:bg-gray-700 dark:border-gray-600"
+                />
+                <span className="text-gray-700 dark:text-gray-200">Mark as Published</span>
+              </label>
+
+              <PostEditor
+                value={editingPost.content}
+                onChange={(newContent) =>
+                  setEditingPost((p) => (p ? { ...p, content: newContent } : null))
+                }
+                readOnly={isSaving}
+              />
+            </div>
+
+            <div className="sticky bottom-0 p-5 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-inherit">
+              <button
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className="px-5 py-2 rounded-lg font-semibold bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white hover:bg-gray-400 dark:hover:bg-gray-500 disabled:opacity-50 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleSave(editingPost)}
-                disabled={isLoading}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                disabled={isSaving}
+                className="px-6 py-2 rounded-lg font-semibold bg-accent text-white hover:brightness-110 disabled:opacity-50 transition shadow-md shadow-accent/40"
               >
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isSaving ? 'Saving...' : 'Save changes'}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };

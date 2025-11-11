@@ -51,7 +51,7 @@ export const ManagePostPage = ({ userId }: Props) => {
   };
 
   const handleEditClick = (post: Post) => {
-    setEditingPost({ ...post, content: apiToEditorContent(post.content) });
+    setEditingPost({ ...post, content: apiToEditorContent(post.content, post.images) });
     setOriginalContent(post.content);
   };
 

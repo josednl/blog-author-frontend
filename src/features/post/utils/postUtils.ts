@@ -1,10 +1,40 @@
-import type { ApiPostContent, EditorPostContent } from '../types/postTypes';
+import { Post, ImageInfo, ApiPostContent, EditorPostContent, EditorParagraphBlock, EditorImageBlock } from '@/features/post/types/postTypes';
 
-export const apiToEditorContent = (content: ApiPostContent): EditorPostContent => {
-  return content.map((block) => ({
-    ...block,
-    keyId: crypto.randomUUID(),
-  }));
+export const apiToEditorContent = (
+  content: ApiPostContent,
+  images: ImageInfo[]
+): EditorPostContent => {
+  return content.map((block) => {
+    const keyId = crypto.randomUUID();
+
+    if (block.type === 'paragraph') {
+      const paragraphBlock: EditorParagraphBlock = {
+        type: 'paragraph',
+        keyId,
+        content: block.content,
+      };
+      return paragraphBlock;
+    }
+
+    if (block.type === 'image') {
+      const imageInfo = images.find(img => img.id === block.id);
+
+      const imageBlock: EditorImageBlock = {
+        type: 'image',
+        keyId,
+        id: block.id,
+        file: undefined
+      };
+
+      if (imageInfo) {
+        return { ...imageBlock, url: imageInfo.url };
+      }
+
+      return imageBlock;
+    }
+
+    return block as any;
+  });
 };
 
 export const editorToApiContent = async (

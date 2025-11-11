@@ -48,16 +48,15 @@ const ImagePreview = ({ file }: { file: File }) => {
         src={url}
         alt="Preview"
         onLoad={handleImageLoad}
-        className={`max-w-full rounded-lg object-contain transition-opacity duration-300 ${
-          loading ? 'opacity-0' : 'opacity-100'
-        }`}
+        className={`max-w-full rounded-lg object-contain transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'
+          }`}
       />
     </div>
   );
 };
 
 export const PostEditor = ({ value, onChange, readOnly = false }: PostEditorProps) => {
-  
+
   const updateBlocks = (newBlocks: EditorPostContent) => {
     onChange(newBlocks);
   };
@@ -116,10 +115,10 @@ export const PostEditor = ({ value, onChange, readOnly = false }: PostEditorProp
               <div className="flex flex-col items-center p-4 sm:p-6">
                 {isEditorImageWithFile(block) ? (
                   <ImagePreview file={block.file} />
-                ) : isEditorImageWithId(block) ? (
+                ) : isEditorImageWithId(block) && block.url ? (
                   <img
-                    src={`/images/${block.id}`}
-                    alt={`Image ${block.id}`}
+                    src={block.url.startsWith('http') ? block.url : `${import.meta.env.VITE_API_URL}${block.url}`}
+                    alt={block.originalName || `Image ${block.id}`}
                     className="max-w-full max-h-[400px] w-auto rounded-lg object-contain shadow-md"
                   />
                 ) : (
@@ -151,7 +150,7 @@ export const PostEditor = ({ value, onChange, readOnly = false }: PostEditorProp
       {!readOnly && (
         <div className="flex flex-col sm:flex-row gap-3 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl justify-center items-center transition-all duration-300 hover:border-accent dark:hover:border-accent">
           <span className="text-gray-600 dark:text-gray-400 font-medium text-sm">Add block:</span>
-          
+
           <button
             onClick={addParagraph}
             className="w-full sm:w-auto bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold px-4 py-2 rounded-lg text-sm transition-all duration-300 shadow-sm"

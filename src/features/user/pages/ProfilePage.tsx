@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/provider/AuthProvider';
-import { User as UserIcon, Mail, Image as ImageIcon, Trash2, Save, RefreshCw } from 'lucide-react';
+import { User as UserIcon, Mail, Image as ImageIcon, Trash2, Save } from 'lucide-react';
 import { showErrorToast } from '@/shared/components/showErrorToast';
 import { showSuccessToast } from '@/shared/components/showSuccessToast';
 import { usersAPI } from '@/features/user/services/usersAPI';
@@ -11,17 +11,25 @@ export const ProfilePage = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!user) return;
     try {
       setIsLoading(true);
       const data = await usersAPI.getById(user.id);
+
+      const profilePicUrl =
+        data.profilePicUrl?.startsWith('http')
+          ? data.profilePicUrl
+          : data.profilePicUrl
+          ? `${import.meta.env.VITE_API_URL || ''}${data.profilePicUrl}`
+          : null;
+
       setProfile(data);
-      setPreviewUrl(data.profilePicUrl);
+      setPreviewUrl(profilePicUrl);
     } catch (error: any) {
       showErrorToast(error);
     } finally {
@@ -54,9 +62,12 @@ export const ProfilePage = () => {
         if (profile.profilePicId) {
           await usersAPI.deleteProfileImage(profile.profilePicId);
         }
+
         const formData = new FormData();
         formData.append('image', pendingFile);
+
         const { imageUrl, imageId } = await usersAPI.uploadProfileImage(formData);
+
         profile.profilePicId = imageId;
         setPreviewUrl(imageUrl);
         setPendingFile(null);
@@ -69,6 +80,7 @@ export const ProfilePage = () => {
         bio: profile.bio,
         profilePicId: profile.profilePicId,
       });
+
       setProfile(updated);
       showSuccessToast('Profile updated successfully.');
     } catch (error: any) {
@@ -89,18 +101,25 @@ export const ProfilePage = () => {
     }
   };
 
-  if (!user || !profile) {
+  if (isLoading)
     return (
       <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        {isLoading ? 'Loading user data...' : 'User data not found.'}
+        Loading user data...
       </div>
     );
-  }
 
-  const profileImageUrl = previewUrl || profile.profilePicUrl || 'https://via.placeholder.com/150?text=No+Photo';
+  if (!user || !profile)
+    return (
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+        User data not found.
+      </div>
+    );
+
+  const profileImageUrl =
+    previewUrl || profile.profilePicUrl || 'https://via.placeholder.com/150?text=No+Photo';
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg transition-colors duration-300">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           User Profile Settings
@@ -110,13 +129,18 @@ export const ProfilePage = () => {
 
       <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-1/3 flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-accent dark:border-indigo-400 shadow-lg">
+          <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-accent dark:border-indigo-400 shadow-lg bg-gray-100 dark:bg-gray-700">
             <img
               src={profileImageUrl}
-              alt={`${profile.name}'s profile picture`}
+              alt={`${profile.name || 'User'}'s profile picture`}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  'https://via.placeholder.com/150?text=No+Photo';
+              }}
             />
           </div>
+
           <input
             type="file"
             accept="image/*"
@@ -124,7 +148,10 @@ export const ProfilePage = () => {
             id="upload-photo"
             onChange={handleFileChange}
           />
-          <label htmlFor='upload-photo' className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors flex items-center">
+          <label
+            htmlFor="upload-photo"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors flex items-center"
+          >
             <ImageIcon className="w-4 h-4 mr-2" /> Upload New Photo
           </label>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -145,11 +172,12 @@ export const ProfilePage = () => {
               <input
                 type="text"
                 value={profile.name || ''}
-                disabled={isSaving || isLoading}
+                disabled={isSaving}
                 onChange={(e) => handleChange('name', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 shadow-sm p-2"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Username
@@ -157,7 +185,7 @@ export const ProfilePage = () => {
               <input
                 type="text"
                 value={profile.username || ''}
-                disabled={isSaving || isLoading}
+                disabled={isSaving}
                 onChange={(e) => handleChange('username', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 shadow-sm p-2"
               />
@@ -171,7 +199,7 @@ export const ProfilePage = () => {
             <input
               type="email"
               value={profile.email || ''}
-              disabled={isSaving || isLoading}
+              disabled={isSaving}
               onChange={(e) => handleChange('email', e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 shadow-sm p-2"
             />
@@ -183,7 +211,7 @@ export const ProfilePage = () => {
             </label>
             <textarea
               value={profile.bio || ''}
-              disabled={isSaving || isLoading}
+              disabled={isSaving}
               onChange={(e) => handleChange('bio', e.target.value)}
               rows={3}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 shadow-sm p-2"
@@ -196,7 +224,7 @@ export const ProfilePage = () => {
               disabled={isSaving}
               className="flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50"
             >
-              <Save className="w-4 h-4" /> Save Changes
+              <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
 
             <button

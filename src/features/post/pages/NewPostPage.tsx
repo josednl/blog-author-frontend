@@ -37,6 +37,7 @@ export const NewPostPage = ({ userId }: Props) => {
         content: [] as ApiPostContent,
         published: publish,
         authorId: userId,
+        images: [],
       };
 
       const createdPost = await postsAPI.create(initialPayload);

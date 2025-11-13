@@ -1,16 +1,71 @@
-# React + Vite
+# Blog Admin & Editor - Front End
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Description
 
-Currently, two official plugins are available:
+This React application provides a dashboard for **admins and editors** to manage blog content and access.  
+Admins can view and manage all users, roles and permissions, while editors can create, edit, and publish their own posts.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+It consumes the [Blog API](https://github.com/josednl/blog-backend).
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- **Role-based access**: admin and editor dashboards.
+- Create, edit, delete, publish, and unpublish posts.
+- Dark mode support.
+- JWT authentication via API.
+- Responsive interface built with TailwindCSS.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Technologies Used
+
+- **Framework**: React + Vite
+- **Language**: TypeScript
+- **Styling**: TailwindCSS
+- **State Management**: Context API / React Hooks
+- **Auth**: JWT stored in `cookies`
+- **Tools**: dotenv, Axios, Prettier
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/)
+- [npm](https://docs.npmjs.com/)
+
+---
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/josednl/blog-author-frontend.git
+cd blog-author-frontend
+```
+
+2. Install dependencies
+
+```bash
+npm install
+```
+
+3. Create a .env file in the root directory with the following variables:
+
+```bash
+VITE_API_URL=http://localhost:3000
+```
+
+4. Start the development server:
+
+```bash
+npm run dev
+```
+
+6. Open the app:
+
+```bash
+Open http://localhost:5173 or use Postman
+```
